@@ -1,36 +1,21 @@
 const HOURS_IN_WORKING_DAY = 8;
 const HOUR_IN_MS = 1000 * 60 * 60;
 const DAY_IN_MS = HOUR_IN_MS * 24;
+const TIME_BETWEEN_WORKDAYS_IN_MS = 16 * HOUR_IN_MS;
 
 const numberOfWorkDaysByHours = (hours: number) =>
   Math.floor(hours / HOURS_IN_WORKING_DAY);
 
 const getFractalTimeInMS = (hours: number) => HOUR_IN_MS * (hours % 8);
 
-const msToNormalizedDate = (ms: number) => {
-  const today = new Date(ms);
-  today.setHours(0);
-  today.setMinutes(0);
-  today.setSeconds(0);
-  today.setMilliseconds(0);
+const endOfDay = (ms: number) => {
+  const date = new Date(ms);
+  date.setHours(17);
+  date.setMinutes(0);
+  date.setSeconds(0);
+  date.setMilliseconds(0);
 
-  return today;
-};
-
-const isFriday = (date: Date) => date.getDay() === 5;
-
-const startOfDay = (date: number) => {
-  const today = msToNormalizedDate(date);
-  today.setHours(9);
-
-  return today.valueOf();
-};
-
-const endOfDay = (date: number) => {
-  const today = msToNormalizedDate(date);
-  today.setHours(17);
-
-  return today.valueOf();
+  return date.valueOf();
 };
 
 const addHours = (date: Date, hours: number) =>
@@ -79,17 +64,11 @@ export const calculateDueDate = (
     return new Date(addHours(startTime, turnAroundTime));
   }
 
-  let endDate = addDayShift(startTime, turnAroundTime);
-  let remainingTimeToAdd = getFractalTimeInMS(turnAroundTime);
+  const remainingTimeToAdd = getFractalTimeInMS(turnAroundTime);
+  let endDate = addDayShift(startTime, turnAroundTime) + remainingTimeToAdd;
 
-  if (endDate + remainingTimeToAdd > endOfDay(endDate)) {
-    const nextWorkingDayStart = isFriday(new Date(endDate))
-      ? startOfDay(addDays(endDate, 3))
-      : startOfDay(addDays(endDate, 1));
-    remainingTimeToAdd = endDate + remainingTimeToAdd - endOfDay(endDate);
-    endDate = nextWorkingDayStart + remainingTimeToAdd;
-  } else {
-    endDate += remainingTimeToAdd;
+  if (endDate > endOfDay(endDate)) {
+    endDate += TIME_BETWEEN_WORKDAYS_IN_MS;
   }
 
   return new Date(endDate);
