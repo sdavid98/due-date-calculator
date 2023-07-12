@@ -15,17 +15,12 @@ describe('calculateDueDate', () => {
     expect(result).toEqual(expected);
   });
 
-  test('calculates same-day due dates correctly', async () => {
-    const startTime = '2023-07-12 12:34:56';
-    const turnAroundTime = 3;
-    const expected = new Date('2023-07-12 15:34:56');
-    const result = calculateDueDate(startTime, turnAroundTime);
-    expect(result).toEqual(expected);
-  });
-
   test.each<[string, number, string]>([
+    ['2023-07-12 12:34:56', 1, '2023-07-12 13:34:56'],
     ['2023-07-12 12:34:56', 5, '2023-07-13 09:34:56'],
     ['2023-07-12 12:34:56', 10, '2023-07-13 14:34:56'],
+    ['2023-07-12 12:34:56', 36, '2023-07-18 16:34:56'],
+    ['2023-07-12 12:34:56', 40, '2023-07-19 12:34:56'],
     ['2023-07-12 12:34:56', 80, '2023-07-26 12:34:56'],
     ['2023-07-12 12:34:56', 85, '2023-07-27 09:34:56'],
     ['2023-07-12 12:34:56', 200, '2023-08-16 12:34:56'],
