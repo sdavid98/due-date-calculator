@@ -8,8 +8,9 @@ const numberOfWorkDaysByHours = (hours: number) =>
 
 const getFractalTimeInMS = (hours: number) => HOUR_IN_MS * (hours % 8);
 
-const endOfDay = (ms: number) => {
-  const date = new Date(ms);
+const endOfDay = (initial: Date) => {
+  const date = new Date(initial);
+
   date.setHours(17);
   date.setMinutes(0);
   date.setSeconds(0);
@@ -18,10 +19,9 @@ const endOfDay = (ms: number) => {
   return date.valueOf();
 };
 
-const addHours = (date: Date, hours: number) =>
-  date.valueOf() + hours * HOUR_IN_MS;
+const addTime = (date: Date, ms: number) => new Date(date.valueOf() + ms);
 
-const addDays = (date: number, days: number) => date + days * DAY_IN_MS;
+const addDays = (date: Date, days: number) => addTime(date, days * DAY_IN_MS);
 
 const addDayShift = (date: Date, hours: number) => {
   let daysToAdd = numberOfWorkDaysByHours(hours);
@@ -43,7 +43,7 @@ const addDayShift = (date: Date, hours: number) => {
     }
   }
 
-  return addDays(date.valueOf(), daysToAdd);
+  return addDays(date, daysToAdd);
 };
 
 export const calculateDueDate = (
@@ -60,16 +60,15 @@ export const calculateDueDate = (
     return startTime;
   }
 
-  if (addHours(startTime, turnAroundTime) <= endOfDay(startTime.valueOf())) {
-    return new Date(addHours(startTime, turnAroundTime));
-  }
-
   const remainingTimeToAdd = getFractalTimeInMS(turnAroundTime);
-  let endDate = addDayShift(startTime, turnAroundTime) + remainingTimeToAdd;
+  const endDate = addTime(
+    addDayShift(startTime, turnAroundTime),
+    remainingTimeToAdd,
+  );
 
-  if (endDate > endOfDay(endDate)) {
-    endDate += TIME_BETWEEN_WORKDAYS_IN_MS;
+  if (endDate.valueOf() > endOfDay(endDate)) {
+    return addTime(endDate, TIME_BETWEEN_WORKDAYS_IN_MS);
   }
 
-  return new Date(endDate);
+  return endDate;
 };
